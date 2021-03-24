@@ -27,7 +27,7 @@ class TrackController extends AbstractController
 
         return new Response($data, Response::HTTP_OK, [
             'Content-Type' => 'application/json',
-            'Access-Control-Allow-Origin' => '*']);
-
+            'Access-Control-Allow-Origin' => '*'
+        ]);
     }
 }
