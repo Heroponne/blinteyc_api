@@ -3,6 +3,8 @@
 namespace App\Entity;
 
 use App\Repository\UserRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
@@ -35,7 +37,27 @@ class User
     /**
      * @ORM\Column(type="string", length=255, nullable=true)
      */
-    private $token;
+    private $sessionToken;
+
+    /**
+     * @ORM\Column(type="string", length=255, nullable=true)
+     */
+    private $gameToken;
+
+    /**
+     * @ORM\ManyToMany(targetEntity=Game::class, mappedBy="players")
+     */
+    private $games;
+
+    /**
+     * @ORM\Column(type="boolean")
+     */
+    private $ready;
+
+    public function __construct()
+    {
+        $this->games = new ArrayCollection();
+    }
 
     public function getId(): ?int
     {
@@ -78,14 +100,65 @@ class User
         return $this;
     }
 
-    public function getToken(): ?string
+    public function getSessionToken(): ?string
     {
-        return $this->token;
+        return $this->sessionToken;
     }
 
-    public function setToken(?string $token): self
+    public function setSessionToken(?string $sessionToken): self
     {
-        $this->token = $token;
+        $this->sessionToken = $sessionToken;
+
+        return $this;
+    }
+
+    public function getGameToken(): ?string
+    {
+        return $this->gameToken;
+    }
+
+    public function setGameToken(?string $gameToken): self
+    {
+        $this->gameToken = $gameToken;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection|Game[]
+     */
+    public function getGames(): Collection
+    {
+        return $this->games;
+    }
+
+    public function addGame(Game $game): self
+    {
+        if (!$this->games->contains($game)) {
+            $this->games[] = $game;
+            $game->addPlayer($this);
+        }
+
+        return $this;
+    }
+
+    public function removeGame(Game $game): self
+    {
+        if ($this->games->removeElement($game)) {
+            $game->removePlayer($this);
+        }
+
+        return $this;
+    }
+
+    public function getReady(): ?bool
+    {
+        return $this->ready;
+    }
+
+    public function setReady(bool $ready): self
+    {
+        $this->ready = $ready;
 
         return $this;
     }
