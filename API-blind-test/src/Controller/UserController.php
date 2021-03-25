@@ -44,10 +44,11 @@ class UserController extends AbstractController
             $jwt = $matches[1];
             if ($jwt) {
                 $em = $this->getDoctrine()->getManager();
-                $dbUser = $em->getRepository(User::class)->findOneBy(['token' => $jwt]);
+                $dbUser = $em->getRepository(User::class)->findOneBy(['sessionToken' => $jwt]);
                 if ($dbUser) {
                     return new Response('Vous êtes déjà connecté en tant que ' . $dbUser->getUsername(), Response::HTTP_BAD_REQUEST);
                 } else {
+                    $user->setReady(false);
                     return $this->createUserOrSession($user, $serializer);
                 }
             } else {
@@ -74,9 +75,9 @@ class UserController extends AbstractController
             if (!$jwt){
                 return new Response('Le token n\'a pas pu être extrait', Response::HTTP_BAD_REQUEST);
             } else {
-                $user = $userRepository->findOneBy(['token' => $jwt]);
+                $user = $userRepository->findOneBy(['sessionToken' => $jwt]);
                 if ($user) {
-                    $user->setToken(null);
+                    $user->setSessionToken(null);
                     $em = $this->getDoctrine()->getManager();
                     $em->persist($user);
                     $em->flush();
@@ -116,10 +117,10 @@ class UserController extends AbstractController
         //si non on le persiste
         //si oui on édite son token
         if (!$dbUser) {
-            $user->setToken($token);
+            $user->setSessionToken($token);
             $em->persist($user);
         } else {
-            $dbUser->setToken($token);
+            $dbUser->setSessionToken($token);
         }
 
         $em->flush();
