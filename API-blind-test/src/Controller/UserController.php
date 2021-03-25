@@ -6,12 +6,11 @@ use App\Entity\User;
 use App\Repository\UserRepository;
 use Firebase\JWT\JWT;
 use JMS\Serializer\SerializerInterface;
-use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 
-class UserController extends AbstractController
+class UserController extends SessionController
 {
     /**
      * @Route("/users/{id}", name="user_show", methods={"GET"})
@@ -38,24 +37,16 @@ class UserController extends AbstractController
     {
         $requestData = $request->getContent();
         $user = $serializer->deserialize($requestData, User::class, 'json');
+        $isAuthenticated = $this->checkSession();
 
-        //on vérifie si le user a déjà un token
-        if (preg_match('/Bearer\s(\S+)/', $_SERVER['HTTP_AUTHORIZATION'], $matches)) {
-            $jwt = $matches[1];
-            if ($jwt) {
-                $em = $this->getDoctrine()->getManager();
-                $dbUser = $em->getRepository(User::class)->findOneBy(['sessionToken' => $jwt]);
-                if ($dbUser) {
-                    return new Response('Vous êtes déjà connecté en tant que ' . $dbUser->getUsername(), Response::HTTP_BAD_REQUEST);
-                } else {
-                    $user->setReady(false);
-                    return $this->createUserOrSession($user, $serializer);
-                }
-            } else {
-                return $this->createUserOrSession($user, $serializer);
-            }
+        if ($isAuthenticated){
+            return new Response('Vous êtes déjà connecté en tant que ' . $user->getUsername(), Response::HTTP_BAD_REQUEST);
         } else {
-            return new Response('Mauvaise requête.', Response::HTTP_BAD_REQUEST);
+            if (preg_match('/Bearer\s(\S+)/', $_SERVER['HTTP_AUTHORIZATION'], $matches)) {
+                return $this->createUserOrSession($user, $serializer);
+            } else {
+                return new Response('Mauvaise requête.', Response::HTTP_BAD_REQUEST);
+            }
         }
     }
 
@@ -66,28 +57,22 @@ class UserController extends AbstractController
      */
     public function logoutUserAction(UserRepository $userRepository) : Response
     {
-        //on regarde s'il y a un token Bearer dans le header authorization
-        if (!preg_match('/Bearer\s(\S+)/', $_SERVER['HTTP_AUTHORIZATION'], $matches)){
-            return new Response('Token non trouvé dans la requête', Response::HTTP_BAD_REQUEST);
+        $isAuthenticated = $this->checkSession();
+
+        preg_match('/Bearer\s(\S+)/', $_SERVER['HTTP_AUTHORIZATION'], $matches);
+        $jwt = $matches[1];
+
+        if ($isAuthenticated){
+            $user = $userRepository->findOneBy(['sessionToken' => $jwt]);
+            $user->setSessionToken(null);
+            $em = $this->getDoctrine()->getManager();
+            $em->persist($user);
+            $em->flush();
+            return new Response('', Response::HTTP_OK, [
+                'Access-Control-Allow-Origin' => '*'
+            ]);
         } else {
-            $jwt = $matches[1];
-            //si aucun token n'a pu être extrait de la requête
-            if (!$jwt){
-                return new Response('Le token n\'a pas pu être extrait', Response::HTTP_BAD_REQUEST);
-            } else {
-                $user = $userRepository->findOneBy(['sessionToken' => $jwt]);
-                if ($user) {
-                    $user->setSessionToken(null);
-                    $em = $this->getDoctrine()->getManager();
-                    $em->persist($user);
-                    $em->flush();
-                    return new Response('', Response::HTTP_OK, [
-                        'Access-Control-Allow-Origin' => '*'
-                    ]);
-                } else {
-                    return new Response('Aucun utilisateur ne correspond à votre token.', Response::HTTP_BAD_REQUEST);
-                }
-            }
+            return new Response('Vous n\'êtes pas identifié.', Response::HTTP_BAD_REQUEST);
         }
     }
 
