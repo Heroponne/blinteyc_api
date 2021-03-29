@@ -13,7 +13,7 @@ use Symfony\Component\Routing\Annotation\Route;
 class UserController extends SessionController
 {
     /**
-     * @Route("/users/{id}", name="user_show", methods={"GET"})
+     * @Route("/user/{id}", name="user_show", methods={"GET"})
      * @param SerializerInterface $serializer
      * @param User $user
      * @return Response
@@ -28,7 +28,7 @@ class UserController extends SessionController
     }
 
     /**
-     * @Route("/users", name="user_or_session_create", methods={"POST"})
+     * @Route("/users/login", name="user_or_session_create", methods={"POST"})
      * @param Request $request
      * @param SerializerInterface $serializer
      * @return Response
@@ -37,13 +37,14 @@ class UserController extends SessionController
     {
         $requestData = $request->getContent();
         $user = $serializer->deserialize($requestData, User::class, 'json');
-        $isAuthenticated = $this->checkSession();
 
-        if ($isAuthenticated){
-            return new Response('Vous êtes déjà connecté en tant que ' . $user->getUsername(), Response::HTTP_BAD_REQUEST);
+        $currentUser = $this->checkSession();
+
+        if ($currentUser){
+            return new Response('Vous êtes déjà connecté en tant que ' . $currentUser->getUsername(), Response::HTTP_BAD_REQUEST);
         } else {
             if (preg_match('/Bearer\s(\S+)/', $_SERVER['HTTP_AUTHORIZATION'], $matches)) {
-                return $this->createUserOrSession($user, $serializer);
+                return $this->createUserOrSession($user);
             } else {
                 return new Response('Mauvaise requête.', Response::HTTP_BAD_REQUEST);
             }
@@ -51,32 +52,48 @@ class UserController extends SessionController
     }
 
     /**
-     * @Route("/users", name="user_logout", methods={"GET"})
-     * @param UserRepository $userRepository
+     * @Route("/users/logout", name="user_logout", methods={"POST"})
      * @return Response
      */
-    public function logoutUserAction(UserRepository $userRepository) : Response
+    public function logoutUserAction() : Response
     {
-        $isAuthenticated = $this->checkSession();
+        $currentUser = $this->checkSession();
 
-        preg_match('/Bearer\s(\S+)/', $_SERVER['HTTP_AUTHORIZATION'], $matches);
-        $jwt = $matches[1];
-
-        if ($isAuthenticated){
-            $user = $userRepository->findOneBy(['sessionToken' => $jwt]);
-            $user->setSessionToken(null);
+        if ($currentUser){
+            $currentUser->setSessionToken(null);
             $em = $this->getDoctrine()->getManager();
-            $em->persist($user);
+            $em->persist($currentUser);
             $em->flush();
             return new Response('', Response::HTTP_OK, [
                 'Access-Control-Allow-Origin' => '*'
             ]);
         } else {
-            return new Response('Vous n\'êtes pas identifié.', Response::HTTP_BAD_REQUEST);
+            return new Response('Vous n\'êtes pas identifié.', Response::HTTP_UNAUTHORIZED);
         }
     }
 
-    private function createUserOrSession(User $user, SerializerInterface $serializer) : Response
+    /**
+     * @Route("/users/get_ready", name="user_ready", methods={"POST"})
+     * @return Response
+     */
+    public function getReady() : Response
+    {
+        $currentUser = $this->checkSession();
+
+        if ($currentUser){
+            $currentUser->setReady(true);
+            $em = $this->getDoctrine()->getManager();
+            $em->persist($currentUser);
+            $em->flush();
+            return new Response('Vous êtes prêt à jouer !', Response::HTTP_OK, [
+                'Access-Control-Allow-Origin' => '*'
+            ]);
+        } else {
+            return new Response('Vous n\'êtes pas identifié.', Response::HTTP_UNAUTHORIZED);
+        }
+    }
+
+    private function createUserOrSession(User $user) : Response
     {
         //génération du Json Web Token (JWT)
         $secretKey = $this->getParameter('app.jwt_secret');
@@ -109,8 +126,7 @@ class UserController extends SessionController
         }
 
         $em->flush();
-        $responseData = $serializer->serialize($token, 'json');
-        return new Response($responseData, Response::HTTP_CREATED, [
+        return new Response(json_encode($token), Response::HTTP_CREATED, [
             'Content-Type' => 'application/json',
             'Access-Control-Allow-Origin' => '*'
         ]);
