@@ -8,10 +8,10 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 class SessionController extends AbstractController
 {
     /**
-     * return true if a valid session token is found in a request header
-     * @return bool
+     * return the current user if a valid session token is found in the request header
+     * @return User
      */
-    public function checkSession() : bool
+    public function checkSession(): ?User
     {
         //on vérifie si le client a déjà un token
         if (preg_match('/Bearer\s(\S+)/', $_SERVER['HTTP_AUTHORIZATION'], $matches)) {
@@ -20,15 +20,15 @@ class SessionController extends AbstractController
                 $em = $this->getDoctrine()->getManager();
                 $dbUser = $em->getRepository(User::class)->findOneBy(['sessionToken' => $jwt]);
                 if ($dbUser) {
-                    return true;
+                    return $dbUser;
                 } else {
-                    return false;
+                    return null;
                 }
             } else {
-                return false;
+                return null;
             }
         } else {
-            return false;
+            return null;
         }
     }
 }
