@@ -27,36 +27,21 @@ class User
     /**
      * @ORM\Column(type="integer", nullable=true)
      */
-    private $currentScore;
-
-    /**
-     * @ORM\Column(type="integer", nullable=true)
-     */
     private $totalScore;
 
     /**
-     * @ORM\Column(type="string", length=255, nullable=true)
+     * @ORM\OneToMany(targetEntity=Participation::class, mappedBy="player", orphanRemoval=true)
      */
-    private $sessionToken;
+    private $participations;
 
     /**
-     * @ORM\Column(type="string", length=255, nullable=true)
+     * @ORM\Column(type="binary", nullable=true)
      */
-    private $gameToken;
-
-    /**
-     * @ORM\ManyToMany(targetEntity=Game::class, mappedBy="players")
-     */
-    private $games;
-
-    /**
-     * @ORM\Column(type="boolean")
-     */
-    private $ready;
+    private $sessionHash;
 
     public function __construct()
     {
-        $this->games = new ArrayCollection();
+        $this->participations = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -76,18 +61,6 @@ class User
         return $this;
     }
 
-    public function getCurrentScore(): ?int
-    {
-        return $this->currentScore;
-    }
-
-    public function setCurrentScore(?int $currentScore): self
-    {
-        $this->currentScore = $currentScore;
-
-        return $this;
-    }
-
     public function getTotalScore(): ?int
     {
         return $this->totalScore;
@@ -100,65 +73,44 @@ class User
         return $this;
     }
 
-    public function getSessionToken(): ?string
-    {
-        return $this->sessionToken;
-    }
-
-    public function setSessionToken(?string $sessionToken): self
-    {
-        $this->sessionToken = $sessionToken;
-
-        return $this;
-    }
-
-    public function getGameToken(): ?string
-    {
-        return $this->gameToken;
-    }
-
-    public function setGameToken(?string $gameToken): self
-    {
-        $this->gameToken = $gameToken;
-
-        return $this;
-    }
-
     /**
-     * @return Collection|Game[]
+     * @return Collection|Participation[]
      */
-    public function getGames(): Collection
+    public function getParticipations(): Collection
     {
-        return $this->games;
+        return $this->participations;
     }
 
-    public function addGame(Game $game): self
+    public function addParticipation(Participation $participation): self
     {
-        if (!$this->games->contains($game)) {
-            $this->games[] = $game;
-            $game->addPlayer($this);
+        if (!$this->participations->contains($participation)) {
+            $this->participations[] = $participation;
+            $participation->setPlayer($this);
         }
 
         return $this;
     }
 
-    public function removeGame(Game $game): self
+    public function removeParticipation(Participation $participation): self
     {
-        if ($this->games->removeElement($game)) {
-            $game->removePlayer($this);
+        if ($this->participations->removeElement($participation)) {
+            // set the owning side to null (unless already changed)
+            if ($participation->getPlayer() === $this) {
+                $participation->setPlayer(null);
+            }
         }
 
         return $this;
     }
 
-    public function getReady(): ?bool
+    public function getSessionHash()
     {
-        return $this->ready;
+        return $this->sessionHash;
     }
 
-    public function setReady(bool $ready): self
+    public function setSessionHash($sessionHash): self
     {
-        $this->ready = $ready;
+        $this->sessionHash = $sessionHash;
 
         return $this;
     }

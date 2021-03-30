@@ -25,11 +25,6 @@ class Game
     private $token;
 
     /**
-     * @ORM\ManyToMany(targetEntity=User::class, inversedBy="games")
-     */
-    private $players;
-
-    /**
      * @ORM\ManyToOne(targetEntity=State::class, inversedBy="games")
      * @ORM\JoinColumn(nullable=false)
      */
@@ -41,9 +36,14 @@ class Game
      */
     private $playlist;
 
+    /**
+     * @ORM\OneToMany(targetEntity=Participation::class, mappedBy="game", orphanRemoval=true)
+     */
+    private $participations;
+
     public function __construct()
     {
-        $this->players = new ArrayCollection();
+        $this->participations = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -59,30 +59,6 @@ class Game
     public function setToken(string $token): self
     {
         $this->token = $token;
-
-        return $this;
-    }
-
-    /**
-     * @return Collection|User[]
-     */
-    public function getPlayers(): Collection
-    {
-        return $this->players;
-    }
-
-    public function addPlayer(User $player): self
-    {
-        if (!$this->players->contains($player)) {
-            $this->players[] = $player;
-        }
-
-        return $this;
-    }
-
-    public function removePlayer(User $player): self
-    {
-        $this->players->removeElement($player);
 
         return $this;
     }
@@ -107,6 +83,36 @@ class Game
     public function setPlaylist(?Playlist $playlist): self
     {
         $this->playlist = $playlist;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection|Participation[]
+     */
+    public function getParticipations(): Collection
+    {
+        return $this->participations;
+    }
+
+    public function addParticipation(Participation $participation): self
+    {
+        if (!$this->participations->contains($participation)) {
+            $this->participations[] = $participation;
+            $participation->setGame($this);
+        }
+
+        return $this;
+    }
+
+    public function removeParticipation(Participation $participation): self
+    {
+        if ($this->participations->removeElement($participation)) {
+            // set the owning side to null (unless already changed)
+            if ($participation->getGame() === $this) {
+                $participation->setGame(null);
+            }
+        }
 
         return $this;
     }
