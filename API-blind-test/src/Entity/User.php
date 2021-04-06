@@ -35,7 +35,7 @@ class User
     private $participations;
 
     /**
-     * @ORM\Column(type="binary", nullable=true)
+     * @ORM\Column(type="binary", nullable=true, length=32)
      */
     private $sessionHash;
 

@@ -20,11 +20,6 @@ class Game
     private $id;
 
     /**
-     * @ORM\Column(type="string", length=255)
-     */
-    private $token;
-
-    /**
      * @ORM\ManyToOne(targetEntity=State::class, inversedBy="games")
      * @ORM\JoinColumn(nullable=false)
      */
@@ -41,6 +36,16 @@ class Game
      */
     private $participations;
 
+    /**
+     * @ORM\Column(type="integer", nullable=true)
+     */
+    private $currentTrack;
+
+    /**
+     * @ORM\Column(type="datetime_immutable", nullable=true)
+     */
+    private $startTime;
+
     public function __construct()
     {
         $this->participations = new ArrayCollection();
@@ -49,18 +54,6 @@ class Game
     public function getId(): ?int
     {
         return $this->id;
-    }
-
-    public function getToken(): ?string
-    {
-        return $this->token;
-    }
-
-    public function setToken(string $token): self
-    {
-        $this->token = $token;
-
-        return $this;
     }
 
     public function getState(): ?State
@@ -113,6 +106,30 @@ class Game
                 $participation->setGame(null);
             }
         }
+
+        return $this;
+    }
+
+    public function getCurrentTrack(): ?int
+    {
+        return $this->currentTrack;
+    }
+
+    public function setCurrentTrack(?int $currentTrack): self
+    {
+        $this->currentTrack = $currentTrack;
+
+        return $this;
+    }
+
+    public function getStartTime(): ?\DateTimeImmutable
+    {
+        return $this->startTime;
+    }
+
+    public function setStartTime(?\DateTimeImmutable $startTime): self
+    {
+        $this->startTime = $startTime;
 
         return $this;
     }

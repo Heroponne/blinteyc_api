@@ -17,32 +17,16 @@ class GameController extends SessionController
      * @Route("/game_create", name="game", methods={"POST"})
      * @param StateRepository $stateRepository
      * @param PlaylistRepository $playlistRepository
+     * @param Request $request
      * @return Response
      */
-    public function createGame(StateRepository $stateRepository, PlaylistRepository $playlistRepository): Response
+    public function createGame(StateRepository $stateRepository, PlaylistRepository $playlistRepository, Request $request): Response
     {
-        $currentUser = $this->checkSession();
+        $currentUser = $this->checkSession($request);
         if ($currentUser){
 
             //création d'une partie
             $game = new Game();
-
-            //génération du Json Web Token (JWT)
-            $secretKey = $this->getParameter('app.jwt_secret');
-            $serverName = "http://localhost/appli-blind-test/API-blind-test";
-            $date = new \DateTime();
-            $data = [
-                'iss' => $serverName,
-                'iat' => $date->format('Y-m-d H:i:s')
-            ];
-
-            $token = JWT::encode(
-                $data,
-                $secretKey,
-                'HS256'
-            );
-
-            $game->setToken($token);
 
             $state = $stateRepository->find(1);
             $game->setState($state);
@@ -50,34 +34,33 @@ class GameController extends SessionController
             $playlist = $playlistRepository->find(1);
             $game->setPlaylist($playlist);
 
-            $game->addPlayer($currentUser);
-
-            $currentUser->setGameToken($token);
-
             $em = $this->getDoctrine()->getManager();
             $em->persist($game);
             $em->flush();
 
-            return new Response(json_encode($token), Response::HTTP_CREATED);
+            return $this->forward('App\Controller\ParticipationController::createParticipationAction', [
+                'player' => $currentUser,
+                'game' => $game
+            ]);
         } else {
             return new Response('Vous n\'êtes pas authentifié.', Response::HTTP_BAD_REQUEST);
         }
     }
 
     /**
+     * @Route("/game_play", name="game", methods={"GET"})
      * @param GameRepository $gameRepository
+     * @param Request $request
      * @return Response
      */
-    public function startGame(GameRepository $gameRepository) : Response
+    public function playGameAction(GameRepository $gameRepository, Request $request) : Response
     {
-        $currentUser = $this->checkSession();
+        $currentUser = $this->checkSession($request);
         if ($currentUser){
-            // on vérifie qu'il ait un token de jeu
-            // et que le token est valide (jeu existant et non terminé)
-            $gameToken = $currentUser->getGameToken();
-            if ($gameToken){
-                $currentGame = $gameRepository;
-            }
+
+        } else {
+
         }
+        return new Response();
     }
 }

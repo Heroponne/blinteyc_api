@@ -31,13 +31,9 @@ class Participation
 
     /**
      * @ORM\Column(type="boolean")
+     * @ORM\JoinColumn(nullable=false)
      */
     private $playerState;
-
-    /**
-     * @ORM\Column(type="boolean")
-     */
-    private $gameState;
 
     /**
      * @ORM\Column(type="integer", nullable=true)
@@ -81,18 +77,6 @@ class Participation
     public function setPlayerState(bool $playerState): self
     {
         $this->playerState = $playerState;
-
-        return $this;
-    }
-
-    public function getGameState(): ?bool
-    {
-        return $this->gameState;
-    }
-
-    public function setGameState(bool $gameState): self
-    {
-        $this->gameState = $gameState;
 
         return $this;
     }
