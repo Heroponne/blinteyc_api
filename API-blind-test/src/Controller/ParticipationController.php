@@ -57,6 +57,7 @@ class ParticipationController extends AbstractController
         if ($nbPlayers == $nbReadyPlayers){
             $participation->getGame()->setState($stateRepository->find(2));
             $participation->getGame()->setStartTime(new \DateTimeImmutable());
+            $participation->getGame()->setCurrentTrack(1);
         };
 
         $em = $this->getDoctrine()->getManager();
