@@ -14,7 +14,7 @@ use Symfony\Component\Routing\Annotation\Route;
 class GameController extends SessionController
 {
     /**
-     * @Route("/game_create", name="game", methods={"POST"})
+     * @Route("/games/create", name="game_create", methods={"POST"})
      * @param StateRepository $stateRepository
      * @param PlaylistRepository $playlistRepository
      * @param Request $request
@@ -48,7 +48,7 @@ class GameController extends SessionController
     }
 
     /**
-     * @Route("/game_play", name="game", methods={"GET"})
+     * @Route("/games/play", name="game_start", methods={"GET"})
      * @param GameRepository $gameRepository
      * @param Request $request
      * @return Response
