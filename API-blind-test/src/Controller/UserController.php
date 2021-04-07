@@ -86,7 +86,7 @@ class UserController extends SessionController
         }
 
         $em->flush();
-        return new Response(json_encode($username), Response::HTTP_CREATED, [
+        return new Response($username, Response::HTTP_CREATED, [
             'Content-Type' => 'application/json',
             'Access-Control-Allow-Origin' => '*'
         ]);
