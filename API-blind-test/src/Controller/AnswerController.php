@@ -10,16 +10,16 @@ use Symfony\Component\Routing\Annotation\Route;
 class AnswerController extends AbstractController
 {
     /**
-     * @Route("/answers", name="answer_check", methods={"GET"})
+     * @Route("/answers", name="answer_check", methods={"POST"})
      * @param TrackRepository $trackRepository
      * @return Response
      */
     public function checkAnswer(TrackRepository $trackRepository): Response
     {
         //on récupère l'id de la chanson
-        $track_id = $_GET['track_id'];
+        $track_id = $_POST['track_id'];
         //on récupère la réponse de l'utilisateur
-        $answer = $_GET['answer'];
+        $answer = $_POST['answer'];
 
         //on récupère la chanson dans la BDD
         $track = $trackRepository->find(intval($track_id));

@@ -62,11 +62,11 @@ class GameController extends SessionController
             if ($participationId) {
                 $game = $participationRepository->find($participationId)->getGame();
                 if ($game->getState() == $stateRepository->find(2)){
-                    $trackUrl = $game->getPlaylist()->getTracks()->get(0)->getTrackUrl();
-                    $responseArray = ['trackUrl' => $trackUrl];
+                    $track = $game->getPlaylist()->getTracks()->get(0);
+                    $responseArray = ['track_url' => $track->getTrackUrl(), 'track_id' => $track->getId()];
                     return new Response(json_encode($responseArray), Response::HTTP_OK);
                 } else{
-                    return new Response('Pas encore !', Response::HTTP_OK);
+                    return new Response('Pas encore !', Response::HTTP_FORBIDDEN);
                 }
             } else {
                 return new Response('Pas de partie en cours.', Response::HTTP_BAD_REQUEST);
