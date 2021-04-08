@@ -47,13 +47,13 @@ class GameController extends SessionController
     }
 
     /**
-     * @Route("/games/start", name="game_start", methods={"POST"})
+     * @Route("/games/play", name="game_start", methods={"POST"})
      * @param StateRepository $stateRepository
      * @param ParticipationRepository $participationRepository
      * @param Request $request
      * @return Response
      */
-    public function startGame(StateRepository $stateRepository, ParticipationRepository $participationRepository,Request $request) : Response
+    public function playGame(StateRepository $stateRepository, ParticipationRepository $participationRepository,Request $request) : Response
     {
         $currentUser = $this->checkSession($request);
         if ($currentUser) {
@@ -61,10 +61,20 @@ class GameController extends SessionController
             $participationId = $requestData['participationToken'];
             if ($participationId) {
                 $game = $participationRepository->find($participationId)->getGame();
-                if ($game->getState() == $stateRepository->find(2)){
-                    $track = $game->getPlaylist()->getTracks()->get(0);
-                    $responseArray = ['track_url' => $track->getTrackUrl(), 'track_id' => $track->getId()];
-                    return new Response(json_encode($responseArray), Response::HTTP_OK);
+                if ($game->getState() === $stateRepository->find(2)){
+                    $nbTracks = $game->getPlaylist()->getTracks()->count();
+                    if ($game->getCurrentTrack() < $nbTracks){
+                        $track = $game->getPlaylist()->getTracks()->get($game->getCurrentTrack());
+                        $responseArray = ['track_url' => $track->getTrackUrl(), 'track_id' => $track->getId()];
+                        $game->setCurrentTrack($game->getCurrentTrack() + 1);
+                        $em = $this->getDoctrine()->getManager();
+                        $em->persist($game);
+                        $em->flush();
+                        return new Response(json_encode($responseArray), Response::HTTP_OK);
+                    } else {
+                        $response = ['ended' => 'Partie terminée'];
+                        return new Response(json_encode($response), Response::HTTP_OK);
+                    }
                 } else{
                     return new Response('Pas encore !', Response::HTTP_FORBIDDEN);
                 }
@@ -103,8 +113,8 @@ class GameController extends SessionController
                         $em = $this->getDoctrine()->getManager();
                         $em->persist($game);
                         $em->flush();
-                        $newTrackURL = $game->getPlaylist()->getTracks()->get($currentTrack - 1)->getTrackURL();
-                        $responseArray = ['trackURL' => $newTrackURL];
+                        $newTrack = $game->getPlaylist()->getTracks()->get($currentTrack - 1)->getTrackURL();
+                        $responseArray = ['track_url' => $newTrack->getTrackUrl(), 'track_id' => $newTrack->getId()];
                         return new Response(json_encode($responseArray), Response::HTTP_OK);
                     } else {
                         return new Response('Pas encore !', Response::HTTP_OK);
