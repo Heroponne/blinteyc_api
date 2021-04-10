@@ -29,11 +29,7 @@ class ParticipationController extends AbstractController
         $em->persist($participation);
         $em->flush();
 
-        $response = [
-            'participation_id' => $participation->getId(),
-            'game_id' => $participation->getGame()->getId(),
-            'playlist_id' => $participation->getGame()->getPlaylist()->getId(),
-            'nb_of_tracks' => $participation->getGame()->getPlaylist()->getTracks()->count()];
+        $response = ['participation_id' => $participation->getId()];
 
         return new Response(json_encode($response), Response::HTTP_CREATED);
     }
@@ -57,7 +53,7 @@ class ParticipationController extends AbstractController
         if ($nbPlayers == $nbReadyPlayers){
             $participation->getGame()->setState($stateRepository->find(2));
             $participation->getGame()->setStartTime(new \DateTimeImmutable());
-            $participation->getGame()->setCurrentTrack(1);
+            $participation->getGame()->setCurrentTrack(0);
         };
 
         $em = $this->getDoctrine()->getManager();
