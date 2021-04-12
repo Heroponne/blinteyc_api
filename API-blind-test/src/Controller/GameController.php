@@ -61,6 +61,7 @@ class GameController extends SessionController
             $participationId = $requestData['participationToken'];
             if ($participationId) {
                 $game = $participationRepository->find($participationId)->getGame();
+                $participation = $participationRepository->find($participationId);
                 if ($game->getState() === $stateRepository->find(2)){
                     $nbTracks = $game->getPlaylist()->getTracks()->count();
                     if ($game->getCurrentTrack() < $nbTracks){
@@ -72,7 +73,17 @@ class GameController extends SessionController
                         $em->flush();
                         return new Response(json_encode($responseArray), Response::HTTP_OK);
                     } else {
-                        $response = ['ended' => 'Partie terminée'];
+                        $totalScore = $participation->getCurrentScore();
+                        $response = ['ended' => 'Partie terminée', 'score' => $totalScore];
+                        $currentUser->setTotalScore($currentUser->getTotalScore() + $totalScore);
+
+                        $game->setState($stateRepository->find(3));
+
+                        $em = $this->getDoctrine()->getManager();
+                        $em->persist($currentUser);
+                        $em->persist($game);
+                        $em->flush();
+
                         return new Response(json_encode($response), Response::HTTP_OK);
                     }
                 } else{
@@ -80,50 +91,6 @@ class GameController extends SessionController
                 }
             } else {
                 return new Response('Pas de partie en cours.', Response::HTTP_BAD_REQUEST);
-            }
-        } else {
-            return new Response('Vous n\'êtes pas authentifié.', Response::HTTP_BAD_REQUEST);
-        }
-    }
-
-    /**
-     * @Route("/game_play", name="game", methods={"GET"})
-     * @param ParticipationRepository $participationRepository
-     * @param Request $request
-     * @return Response
-     */
-    public function playGameAction(ParticipationRepository $participationRepository, Request $request) : Response
-    {
-        $currentUser = $this->checkSession($request);
-        if ($currentUser){
-            $requestData = $request->getContent();
-            $participationId = $requestData['participationToken'];
-            if ($participationId){
-                $game = $participationRepository->find($participationId)->getGame();
-                $startTime = $game->getStartTime();
-                $currentTrack = $game->getCurrentTrack();
-                $nbTracks = $game->getPlaylist()->getTracks()->count();
-                //on vérifie qu'il y a toujours des chansons disponibles
-                if ($currentTrack <= $nbTracks){
-                    //on vérifie les temps :
-                    //si on a dépassé
-                    if (new \DateTime() >= $startTime->add(new \DateInterval('T20S'))){
-                        $game->setCurrentTrack($currentTrack + 1);
-                        $game->setStartTime(new \DateTimeImmutable());
-                        $em = $this->getDoctrine()->getManager();
-                        $em->persist($game);
-                        $em->flush();
-                        $newTrack = $game->getPlaylist()->getTracks()->get($currentTrack - 1)->getTrackURL();
-                        $responseArray = ['track_url' => $newTrack->getTrackUrl(), 'track_id' => $newTrack->getId()];
-                        return new Response(json_encode($responseArray), Response::HTTP_OK);
-                    } else {
-                        return new Response('Pas encore !', Response::HTTP_OK);
-                    }
-                } else {
-                    return new Response('Partie finie !', Response::HTTP_OK);
-                }
-            } else {
-                return new Response('Vous n\'avez pas de partie en cours.', Response::HTTP_BAD_REQUEST);
             }
         } else {
             return new Response('Vous n\'êtes pas authentifié.', Response::HTTP_BAD_REQUEST);

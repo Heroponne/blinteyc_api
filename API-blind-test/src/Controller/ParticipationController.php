@@ -50,7 +50,7 @@ class ParticipationController extends AbstractController
         $nbPlayers = $players->count();
         $nbReadyPlayers = $readyPlayers->count();
 
-        if ($nbPlayers == $nbReadyPlayers){
+        if ($nbPlayers == $nbReadyPlayers && $participation->getGame()->getState() != $stateRepository->find(3)){
             $participation->getGame()->setState($stateRepository->find(2));
             $participation->getGame()->setStartTime(new \DateTimeImmutable());
             $participation->getGame()->setCurrentTrack(0);

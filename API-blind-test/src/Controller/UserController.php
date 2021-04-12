@@ -80,6 +80,7 @@ class UserController extends SessionController
         //si oui on édite son token
         if (!$dbUser) {
             $user->setSessionHash(hash("sha1", $username, true));
+            $user->setTotalScore(0);
             $em->persist($user);
         } else {
             $dbUser->setSessionHash(hash("sha1", $username, true));
