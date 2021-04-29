@@ -67,6 +67,9 @@ class GameController extends SessionController
                     if ($game->getCurrentTrack() < $nbTracks){
                         $track = $game->getPlaylist()->getTracks()->get($game->getCurrentTrack());
                         $responseArray = ['track_url' => $track->getTrackUrl(), 'track_id' => $track->getId()];
+                        //rajouter une restriction de temps pour les parties en multijoueur
+                        //et éviter qu'à chaque requête d'utilisateur le currentTrack s'incrémente
+                        //ou un trigger en base de données
                         $game->setCurrentTrack($game->getCurrentTrack() + 1);
                         $em = $this->getDoctrine()->getManager();
                         $em->persist($game);
