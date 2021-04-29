@@ -61,7 +61,7 @@ class UserController extends SessionController
             $em = $this->getDoctrine()->getManager();
             $em->persist($currentUser);
             $em->flush();
-            return new Response('', Response::HTTP_OK, [
+            return new Response('Déconnexion réussie !', Response::HTTP_OK, [
                 'Access-Control-Allow-Origin' => '*'
             ]);
         } else {
@@ -76,7 +76,7 @@ class UserController extends SessionController
         $dbUser = $em->getRepository(User::class)->findOneBy(['username' => $username]);
 
         //on vérifie si l'utilisateur est déjà en BDD
-        //si non on le persiste
+        //si non on le crée
         //si oui on édite son token
         if (!$dbUser) {
             $user->setSessionHash(hash("sha1", $username, true));
@@ -87,7 +87,7 @@ class UserController extends SessionController
         }
 
         $em->flush();
-        return new Response(json_encode($username), Response::HTTP_CREATED, [
+        return new Response(json_encode(['sessionToken' => $username]), Response::HTTP_CREATED, [
             'Content-Type' => 'application/json',
             'Access-Control-Allow-Origin' => '*'
         ]);
