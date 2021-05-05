@@ -75,21 +75,35 @@ class UserController extends SessionController
         $em = $this->getDoctrine()->getManager();
         $dbUser = $em->getRepository(User::class)->findOneBy(['username' => $username]);
 
+        //création du JWT
+        //$tokenHeader = ["alg" => "HS256", "typ" => "JWT"];
+        //$tokenPayload = ["username" => $username];
+        //$tokenSignature = $_ENV["JWT_SECRET"];
+        //$jwt = JWT::encode($tokenPayload, $tokenSignature);
+
         //on vérifie si l'utilisateur est déjà en BDD
         //si non on le crée
         //si oui on édite son token
         if (!$dbUser) {
             $user->setSessionHash(hash("sha1", $username, true));
+            //$user->setSessionHash($jwt);
             $user->setTotalScore(0);
             $em->persist($user);
         } else {
             $dbUser->setSessionHash(hash("sha1", $username, true));
+            //$dbUser->setSessionHash($jwt);
         }
 
         $em->flush();
-        return new Response(json_encode(['sessionToken' => $username]), Response::HTTP_CREATED, [
+        return new Response(json_encode(['sessionToken' => $username, 'username' => $username]), Response::HTTP_CREATED, [
             'Content-Type' => 'application/json',
             'Access-Control-Allow-Origin' => '*'
         ]);
+        /*
+        return new Response(json_encode(['sessionToken' => $jwt, 'username' => $username]), Response::HTTP_CREATED, [
+            'Content-Type' => 'application/json',
+            'Access-Control-Allow-Origin' => '*'
+        ]);
+        */
     }
 }
