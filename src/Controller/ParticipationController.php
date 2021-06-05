@@ -14,7 +14,7 @@ use Symfony\Component\Routing\Annotation\Route;
 class ParticipationController extends AbstractController
 {
     /**
-     * @Route("/participation/create", name="participation_create")
+     * @Route("/participations", methods={"POST"})
      * @param $player
      * @param $game
      * @return Response

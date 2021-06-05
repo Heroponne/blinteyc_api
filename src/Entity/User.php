@@ -20,6 +20,13 @@ class User
     private $id;
 
     /**
+     * @ORM\OneToMany(targetEntity=Participation::class,
+     *     mappedBy="player",
+     *     orphanRemoval=true)
+     */
+    private $participations;
+
+    /**
      * @ORM\Column(type="string", length=255)
      */
     private $username;
@@ -28,11 +35,6 @@ class User
      * @ORM\Column(type="integer", nullable=true)
      */
     private $totalScore;
-
-    /**
-     * @ORM\OneToMany(targetEntity=Participation::class, mappedBy="player", orphanRemoval=true)
-     */
-    private $participations;
 
     /**
      * @ORM\Column(type="binary", nullable=true, length=32)

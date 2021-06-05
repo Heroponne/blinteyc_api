@@ -24,13 +24,12 @@ class GameController extends SessionController
         $currentUser = $this->checkSession($request);
         if ($currentUser){
 
-            //création d'une partie
             $game = new Game();
 
             $state = $stateRepository->find(1);
             $game->setState($state);
 
-            $playlist = $playlistRepository->find(1);
+            $playlist = $playlistRepository->find(2);
             $game->setPlaylist($playlist);
 
             $em = $this->getDoctrine()->getManager();

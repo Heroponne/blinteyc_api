@@ -18,7 +18,7 @@ class SessionController extends AbstractController
         $sessionToken = $request->headers->get('sessionToken');
         if ($sessionToken) {
             $em = $this->getDoctrine()->getManager();
-            $dbUser = $em->getRepository(User::class)->findOneBy(['sessionHash' => hash("sha1", $sessionToken, true)]);
+            $dbUser = $em->getRepository(User::class)->findOneBy(['sessionHash' => pack("H*", $sessionToken)]);
             if ($dbUser) {
                 return $dbUser;
             } else {

@@ -39,9 +39,9 @@ class AnswerController extends SessionController
                 $em->persist($participation);
                 $em->flush();
 
-                $result = json_encode(["result" => "Bonne réponse !", "score" => 30 - intval($requestData['current_time'])]);
+                $result = json_encode(["result" => "Bonne réponse ! Veuillez patienter pour la suite...", "score" => 30 - intval($requestData['current_time'])]);
             } else {
-                $result = json_encode(["result" => "Loupé !"]);
+                $result = json_encode(["result" => "Loupé ! Réessayez autre chose :)"]);
             }
             return new Response($result, Response::HTTP_OK, [
                 'Content-Type' => 'text/plain',
